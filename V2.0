@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyNFT is ERC721Enumerable, Ownable {
+    uint256 public constant MAX_SUPPLY = 1000000;
+    uint256 public burnedCount;
+    mapping(address => bool) public whitelist;
+    mapping(address => bool) public blacklist;
+
+    constructor() ERC721("MyNFT", "MNFT") {}
+
+    function mint(address to, uint256 tokenId) public onlyOwner {
+        require(totalSupply() < MAX_SUPPLY, "Max supply reached");
+        require(whitelist[to], "Address not whitelisted");
+        _safeMint(to, tokenId);
+    }
+
+    function burn(uint256 tokenId) public {
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
+        _burn(tokenId);
+        burnedCount++;
+    }
+
+    function addToWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            whitelist[addresses[i]] = true;
+        }
+    }
+
+    function removeFromWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            whitelist[addresses[i]] = false;
+        }
+    }
+
+    function addToBlacklist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            blacklist[addresses[i]] = true;
+        }
+    }
+
+    function removeFromBlacklist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            blacklist[addresses[i]] = false;
+        }
+    }
+}
